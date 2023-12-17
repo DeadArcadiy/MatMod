@@ -16,14 +16,9 @@ def second(num_samples):
     theta = np.random.uniform(0, 2*np.pi, num_samples)
     x = r * np.cos(theta)
     y = r * np.sin(theta)
-    func_values = integrand_polar(r, theta)
+    func_values = np.log(1 / np.sqrt(x**2 + y**2))
     integral_estimate = np.mean(func_values) * np.pi
     return integral_estimate
-
-def integrand_polar(r, theta):
-    x = r * np.cos(theta)
-    y = r * np.sin(theta)
-    return np.log(1 / np.sqrt(x**2 + y**2))
 
 
 def multi(func,answer):
