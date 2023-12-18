@@ -4,23 +4,23 @@ from scipy.linalg import solve
 
 # Функция, которая использует метод Монте-Карло для решения системы линейных уравнений
 def monte_carlo_solve(A, f, num_chains, chain_length):
-    n = A.shape[0]  # Размерность системы
-    solutions = []  # Список для хранения результатов каждой цепи Маркова
-    
-    # Симуляция цепей Маркова
-    for _ in range(num_chains):
-        x = np.zeros(n)  # Начальная точка цепи Маркова
-        for _ in range(chain_length):
-            # Выбор случайного индекса для обновления
-            i = np.random.choice(n)
-            # Обновление i-того элемента вектора x
-            # Используем формулу: x_i = (f_i - sum(A_ij * x_j for j!=i)) / A_ii
-            x[i] = (f[i] - np.dot(A[i, :], x) + A[i, i] * x[i]) / A[i, i]
-        solutions.append(x)
-    
-    # Вычисление среднего решения из всех смоделированных цепей Маркова
-    average_solution = np.mean(solutions, axis=0)
-    return average_solution, solutions
+    A = np.array([[1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1]]) - A
+    n = A.shape[0]
+    x = np.zeros(n)
+    for j in range(n):
+        for _ in range(num_chains):
+            weight = 1
+            state_prev = j
+            state_new = 0
+            x[j] += f[j]
+            for _ in range(chain_length):
+                state_new = np.random.choice(n)
+                weight *= n * A[state_prev][state_new]
+                x[j] += weight * f[state_new]
+                state_prev = state_new
+    return x / num_chains
 
 # Функция для расчета ошибки между решениями метода Монте-Карло и прямого метода
 def calculate_error(mc_solution, direct_solution):
@@ -41,7 +41,7 @@ results = {}
 # Симуляция метода Монте-Карло с различными параметрами и расчет ошибки
 for num_chains in num_chains_set:
     for chain_length in chain_length_set:
-        mc_solution, _ = monte_carlo_solve(A, f, num_chains, chain_length)
+        mc_solution = monte_carlo_solve(A, f, num_chains, chain_length)
         print('Количество цепей:' + str(num_chains))
         print('Длина цепей:' + str(chain_length))
         print(mc_solution)
